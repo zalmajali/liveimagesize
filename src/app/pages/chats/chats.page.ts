@@ -647,6 +647,7 @@ public error_size_of_file: any;
     };
     this.camera.getPicture(optionsD).then(async (imageData) => {
        const sizeOfFile = await this.getFileSize(imageData);
+      alert(sizeOfFile)
         if(sizeOfFile > 5){
           imageData = "";
           this.displayResult(this.error_size_of_file)
