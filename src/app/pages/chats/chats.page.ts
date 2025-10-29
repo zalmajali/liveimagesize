@@ -646,15 +646,12 @@ public error_size_of_file: any;
       encodingType: this.platform.is('android') ? this.camera.EncodingType.JPEG : undefined
     };
     this.camera.getPicture(optionsD).then(async (imageData) => {
-      this.filePath.resolveNativePath(imageData)
-      .then(async (nativePath: string) => {
-        alert("sdfsdfsdfsdf")
-        const sizeOfFile = await this.getFileSize(nativePath);
+       const sizeOfFile = await this.getFileSize(imageData);
         if(sizeOfFile > 5){
           imageData = "";
           this.displayResult(this.error_size_of_file)
         }else{
-          if(this.platform.is('android') && imageData.startsWith('content://')) {
+          if(imageData && this.platform.is('android') && imageData.startsWith('content://')) {
             resolveLocalFileSystemURL(imageData, (fileEntry:any) => {
               fileEntry.file((file:any) => {
                 const reader = new FileReader();
@@ -683,18 +680,12 @@ public error_size_of_file: any;
                 alert("error file");
               });
             }, (urlError:any) => {
-            alert("error file");
-          });
-        } else {
-          this.uploadImage(imageData);
+              alert("error file");
+            });
+          } else {
+            this.uploadImage(imageData);
+          }
         }
-        }
-      })
-      .catch((err) => {
-        imageData = "";
-        alert(JSON.stringify(err))
-        this.displayResult("sdfsdfsddfff")
-      });
     }, (err) => {
       alert("error file");
     });
