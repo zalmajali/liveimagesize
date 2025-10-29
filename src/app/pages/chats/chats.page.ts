@@ -526,6 +526,11 @@ public error_size_of_file: any;
     });
     await this.loading.dismiss();
  }
+  getBase64SizeInMB(base64: string): number {
+    const stringLength = base64.length - (base64.indexOf(',') + 1);
+    const sizeInBytes = 4 * Math.ceil(stringLength / 3) * 0.5624896334383812;
+    return sizeInBytes / (1024 * 1024);
+  }
   getFileSize(fileUri: string): Promise<number> {
     return new Promise((resolve, reject) => {
       resolveLocalFileSystemURL(fileUri, (fileEntry:any) => {
@@ -560,18 +565,15 @@ public error_size_of_file: any;
     const fileTransfer: FileTransferObject = this.transfer.create();
     this.chooser.getFile().then(async (file:any) =>{
       this.filedata = file;
-      this.filePath.resolveNativePath(file)
-        .then(async (nativePath: string) => {
-          const sizeOfFile = await this.getFileSize(nativePath);
-          if(sizeOfFile > 100){
-            this.filedata = "";
-            this.displayResult(this.error_size_of_file)
-          }
-        })
-        .catch((err) => {
-          this.filedata = "";
-          this.displayResult(this.error_size_of_file)
-        });
+      const fileName = file.substring(file.lastIndexOf('/') + 1);
+      const path = file.substring(0, file.lastIndexOf('/') + 1);
+      await this.file.copyFile(path, fileName, this.file.dataDirectory, fileName);
+      this.filedata = this.file.dataDirectory + fileName;
+      const sizeOfFile = await this.getFileSize(this.filedata);
+      if(sizeOfFile > 100){
+        this.filedata = "";
+        this.displayResult(this.error_size_of_file)
+      }
       if(this.filedata!=undefined && this.filedata!=null && this.filedata!=""){
         let sendValues = {'mainUserName':this.mainUserName,'userName':this.userName,'password':this.password,'apiKey':this.apiKey,'mobile':this.selectNumber,'sessionLogin':this.sessionLogin};
         let options: FileUploadOptions = {
@@ -647,7 +649,6 @@ public error_size_of_file: any;
     };
     this.camera.getPicture(optionsD).then(async (imageData) => {
        const sizeOfFile = await this.getFileSize(imageData);
-      alert(sizeOfFile)
         if(sizeOfFile > 5){
           imageData = "";
           this.displayResult(this.error_size_of_file)
