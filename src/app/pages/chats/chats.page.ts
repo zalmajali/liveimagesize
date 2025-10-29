@@ -560,11 +560,18 @@ public error_size_of_file: any;
     const fileTransfer: FileTransferObject = this.transfer.create();
     this.chooser.getFile().then(async (file:any) =>{
       this.filedata = file;
-      const sizeOfFile = await this.getFileSize(file);
-      if(sizeOfFile > 100){
-        this.filedata = "";
-        this.displayResult(this.error_size_of_file)
-      }
+      this.filePath.resolveNativePath(file)
+        .then(async (nativePath: string) => {
+          const sizeOfFile = await this.getFileSize(nativePath);
+          if(sizeOfFile > 100){
+            this.filedata = "";
+            this.displayResult(this.error_size_of_file)
+          }
+        })
+        .catch((err) => {
+          this.filedata = "";
+          this.displayResult(this.error_size_of_file)
+        });
       if(this.filedata!=undefined && this.filedata!=null && this.filedata!=""){
         let sendValues = {'mainUserName':this.mainUserName,'userName':this.userName,'password':this.password,'apiKey':this.apiKey,'mobile':this.selectNumber,'sessionLogin':this.sessionLogin};
         let options: FileUploadOptions = {
@@ -639,21 +646,8 @@ public error_size_of_file: any;
       encodingType: this.platform.is('android') ? this.camera.EncodingType.JPEG : undefined
     };
     this.camera.getPicture(optionsD).then(async (imageData) => {
-      let finalPath = imageData;
-      if(this.platform.is('ios')) {
-        const fileName = imageData.substring(imageData.lastIndexOf('/') + 1);
-         alert(fileName)
-        await this.file.copyFile(
-          imageData.substring(0, imageData.lastIndexOf('/') + 1),
-          fileName,
-          this.file.dataDirectory,
-          fileName
-        );
-        finalPath = this.file.dataDirectory + fileName;
-        alert(finalPath)
-      }
-       const sizeOfFile = await this.getFileSize(finalPath);
-       alert(sizeOfFile)
+       const sizeOfFile = await this.getFileSize(imageData);
+       alert(sizeOfFile);
         if(sizeOfFile > 5){
           imageData = "";
           this.displayResult(this.error_size_of_file)
