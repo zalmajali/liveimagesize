@@ -642,6 +642,7 @@ public error_size_of_file: any;
       let finalPath = imageData;
       if(this.platform.is('ios')) {
         const fileName = imageData.substring(imageData.lastIndexOf('/') + 1);
+         alert(fileName)
         await this.file.copyFile(
           imageData.substring(0, imageData.lastIndexOf('/') + 1),
           fileName,
@@ -649,8 +650,10 @@ public error_size_of_file: any;
           fileName
         );
         finalPath = this.file.dataDirectory + fileName;
+        alert(finalPath)
       }
        const sizeOfFile = await this.getFileSize(finalPath);
+       alert(sizeOfFile)
         if(sizeOfFile > 5){
           imageData = "";
           this.displayResult(this.error_size_of_file)
