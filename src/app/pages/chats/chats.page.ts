@@ -633,64 +633,58 @@ public error_size_of_file: any;
     }
   }
   async functionSendImage() {
-    if(this.platform.is('android')){
-      const hasPermission = await this.requestMediaPermission();
-      if (!hasPermission) {
-        alert("No permission to upload images");
-        return;
+    let currentDate = new Date();
+    this.year = currentDate.getFullYear();
+    this.month = currentDate.getMonth() + 1; // Months are zero-based (0 = January)
+    this.day = currentDate.getDate();
+    this.hour = currentDate.getHours();
+    this.minutes  = currentDate.getMinutes();
+    this.seconds = currentDate.getSeconds();
+    if(this.month<10)
+      this.month = '0'+ this.month;
+    if(this.day<10) 
+      this.day = '0'+ this.day;
+    if(this.hour<10)   
+      this.hour = '0'+ this.hour;
+    if(this.minutes<10) 
+      this.minutes = '0'+ this.minutes;
+    if(this.seconds<10) 
+      this.seconds = '0'+ this.seconds;
+    let date = this.year+"/"+this.month+"/"+this.day;
+    let typeTime =  this.hour >= 12 ? 'PM' : 'AM';
+    let time = this.hour+":"+this.minutes+" "+typeTime;
+    const fileTransfer: FileTransferObject = this.transfer.create();
+    this.chooser.getFile({mimeTypes: 'image/*'}).then(async (file:any) =>{
+      this.filedata = file;
+      const fileName = file.substring(file.lastIndexOf('/') + 1);
+      const path = file.substring(0, file.lastIndexOf('/') + 1);
+      await this.file.copyFile(path, fileName, this.file.dataDirectory, fileName);
+      this.filedata = this.file.dataDirectory + fileName;
+      const sizeOfFile = await this.getFileSize(this.filedata);
+      if(sizeOfFile > 5){
+        this.filedata = "";
+        this.displayResult(this.error_size_of_file)
       }
-    }
-    let optionsD: CameraOptions = {
-      quality: 100,
-      destinationType: this.camera.DestinationType.FILE_URI,
-      sourceType: this.platform.is('ios') ? this.camera.PictureSourceType.SAVEDPHOTOALBUM : this.camera.PictureSourceType.PHOTOLIBRARY,
-      mediaType: this.camera.MediaType.PICTURE,
-      encodingType: this.platform.is('android') ? this.camera.EncodingType.JPEG : undefined
-    };
-    this.camera.getPicture(optionsD).then(async (imageData) => {
-       const sizeOfFile = await this.getFileSize(imageData);
-        if(sizeOfFile > 5){
-          imageData = "";
-          this.displayResult(this.error_size_of_file)
-        }else{
-          if(imageData && this.platform.is('android') && imageData.startsWith('content://')) {
-            resolveLocalFileSystemURL(imageData, (fileEntry:any) => {
-              fileEntry.file((file:any) => {
-                const reader = new FileReader();
-                reader.onloadend = () => {
-                  if(reader.result) {
-                    let extension = '';
-                      if (file.type === 'image/jpeg') extension = '.jpg';
-                      else if (file.type === 'image/png') extension = '.png';
-                      else if (file.type === 'image/gif') extension = '.gif';
-                      else extension = '.bin'; // fallback
-                      let finalName = file.name;
-                      let imageName = imageData.substring(imageData.lastIndexOf('/') + 1);
-                      if (!finalName || !finalName.includes('.')) {
-                        finalName = imageName + extension;
-                      }
-                    this.uploadImageFromContentUri(reader.result as ArrayBuffer, finalName, file.type);
-                  } else {
-                    alert("error file");
-                  }
-                };
-                reader.onerror = (error) => {
-                  alert("error file");
-                };
-                reader.readAsArrayBuffer(file);
-              }, (fileError:any) => {
-                alert("error file");
-              });
-            }, (urlError:any) => {
-              alert("error file");
-            });
-          } else {
-            this.uploadImage(imageData);
-          }
+      if(this.filedata!=undefined && this.filedata!=null && this.filedata!=""){
+        let sendValues = {'mainUserName':this.mainUserName,'userName':this.userName,'password':this.password,'apiKey':this.apiKey,'mobile':this.selectNumber,'sessionLogin':this.sessionLogin};
+        let options: FileUploadOptions = {
+          fileKey: 'chatFile',
+          fileName:this.filedata.name,
+          mimeType:this.filedata.mediaType,
+          chunkedMode:false,
+          params: sendValues,
+          headers: {}
         }
-    }, (err) => {
-      alert("error file");
-    });
+          fileTransfer.upload(this.filedata.uri, "https://api.taqnyat.sa/chatSendFile.php", options)
+          .then(async(data) => {
+           // await this.functionFeachData(this.selectNumber,this.chatSessionId);
+            //await this.functionChatSeen(this.selectNumber);
+            this.onMessage = "";
+          }, (err) => {
+            
+        })
+      }
+    })
     this.toggled = false;
   }
   async uploadImage(imageData: any) {
