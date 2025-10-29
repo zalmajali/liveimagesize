@@ -650,8 +650,7 @@ public error_size_of_file: any;
         );
         finalPath = this.file.dataDirectory + fileName;
       }
-
-       const sizeOfFile = await this.getFileSize(imageData);
+       const sizeOfFile = await this.getFileSize(finalPath);
         if(sizeOfFile > 5){
           imageData = "";
           this.displayResult(this.error_size_of_file)
